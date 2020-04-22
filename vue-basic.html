@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <script src="js/vue.js" type="text/javascript"></script>
+</head>
+
+<body>
+    <div id="app">
+        {{a}}
+
+        <div v-bind:class="colorStyle">
+            I am colored.
+        </div>
+
+        <div>
+            <p v-if="seen">Can you see me?</p>
+        </div>
+
+
+
+        <!-- v-bind:class -->
+        <div v-bind:class="[isActive?active:'']">
+            This is a test for class binding.
+        </div>
+        <!-- v-show -->
+        <h1 v-show="ok">Test for v-show</h1>
+        <!-- v-for -->
+        <!-- NOTE: here item before index -->
+        <ul>
+            <li v-for="item,index in items" :key="index">
+                {{index}} : {{item.message}}
+            </li>
+        </ul>
+        <ul>
+            <li v-for="key,value in books" :key="key">
+                {{key}} : {{value}}
+            </li>
+        </ul>
+
+        <!-- v-on -->
+        <div>
+            <button v-on:click="greet">Click me!</button>
+            <button v-on:click="sayHello('Hey you!',$event)">say</button>
+        </div>
+
+        <!-- v-model -->
+        <textarea v-model="text1"></textarea>
+        <span> {{text1}}</span>
+
+        <div>
+            <input type="checkbox" id="apple" value="Apple" v-model="checkName">
+            <label for="apple">Apple</label>
+            <input type="checkbox" id="banana" value="Banana" v-model="checkName">
+            <label for="banana">Banana</label>
+            <input type="checkbox" id="watermelon" value="Watermelon" v-model="checkName">
+            <label for="watermelon">Watermelon</label>
+
+            <span>{{checkName}}</span>
+        </div>
+
+        <!-- component -->
+        <button-counter title="title1 :"></button-counter>
+        <button-counter title="title2 :"></button-counter>
+
+        <test></test>
+
+        <!-- v-text -->
+        <h2>v-text</h2>
+        <div v-text="msg">
+        </div>
+        <!-- v-html -->
+        <h2>v-html</h2>
+        <div v-html="htmlString">
+        </div>
+        <!-- v-pre -->
+        <h2>v-pre</h2>
+        <div v-pre>
+            {{msg}}
+        </div>
+        <!-- v-once -->
+        <h2>v-once</h2>
+        <span v-once>
+            {{once}}
+        </span>
+        <!-- v-on -->
+        <h2>v-on</h2>
+        <input type="button" value="increse the number" @click="increaseNumber('v-on usage',$event)" /><br>
+        number: {{num}}
+        <!-- .stop -->
+        <h3>.stop</h3>
+        <div @click="click1">
+            <div @click.stop="click2">
+                Click me!
+            </div>
+        </div>
+        <!-- .prevent -->
+        <h3>.prevent</h3>
+        <div>
+            <a href="https://www.google.com/" @click.prevent="">Google</a>
+        </div>
+        <!-- .keyup -->
+        <h3>.keyup</h3>
+        <div>
+            <input type="text" @keyup.delete="deleteMsg=''" v-model="deleteMsg" />
+            <span v-cloak>Press Delete: {{deleteMsg}}</span>
+        </div>
+        <!-- cutomized -->
+        <h3>customized keyCode</h3>
+        <div>
+            <input type="text" @keyup.a="pressA" />
+        </div>
+
+    </div>
+
+
+
+    <script>
+        // 全局注册
+        Vue.component('button-counter', {
+            props: ['title'],
+            data: function () {
+                return {
+                    counter: 0,
+                }
+            },
+            template: '<button v-on:click="clickFun"> {{title}} You clicked me : {{counter}} times.</button>',
+            methods: {
+                clickFun: function () {
+                    this.counter++;
+                }
+            }
+        });
+
+        Vue.config.keyCodes.a = 65;
+        var vm = new Vue({
+            el: '#app',
+            data: {
+                a: "Hello, World!",
+                colorStyle: 'redd',
+                seen: false,
+                msg: "v-text practice here",
+                htmlString: "<p style='color:red'>Test for v-html.</p>",
+                once: "how to use v-once",
+                active: "active",
+                isActive: true,
+                ok: true,
+                items: [
+                    { message: "apple" },
+                    { message: "banana" },
+                    { message: "watermelon" }
+                ],
+                books: {
+                    author: 'moyan',
+                    book: 'wa',
+                    nationality: 'China'
+                },
+                text1: "",
+                checkName: [],
+                num: 0,
+                deleteMsg: '',
+            },
+            methods: {
+                click1: function () {
+                    console.log("this is click1 function");
+                },
+                click2: function () {
+                    console.log("this is click2 function");
+                },
+                greet: function () {
+                    alert(this.a);
+                },
+                sayHello: function (str, e) {
+                    alert(str);
+                    console.log(e);
+                },
+                increaseNumber: function (message, e) {
+                    console.log(message);
+                    console.log(e.Target.targetName);
+                    this.num++;
+                },
+                pressA: function () {
+                    alert("You just pressed A.");
+                }
+
+            },
+            components: {
+                test: {
+                    template: '<h1>This is h1</h1>'
+                },
+            },
+
+            // Vue life cycle
+            beforeCreate: function () {
+                console.log("beforeCreate");
+
+            },
+            created: function () {
+                console.log("created");
+            },
+            beforeMount: function () {
+                console.log("beforeMount");
+            },
+            mounted: function () {
+                console.log("mounted");
+            },
+            beforeUpdate: function () {
+                console.log("beforeUpdated");
+            },
+            updated: function () {
+                console.log("updated");
+            },
+            beforeDestroy: function () {
+                console.log("beforeDestroy");
+            },
+            destroyed: function () {
+                console.log("destroyed");
+            },
+        });
+
+        vm.a = "Tomorrow is another day!";
+
+        //此行之后才开始起作用
+        vm.$watch('a', function (newVal, oldVal) {
+            console.log(newVal, oldVal);
+        });
+
+        vm.$data.a = "test test test";
+
+        setTimeout(function () { vm.a = "lalalalalalala" }, 2000);
+
+
+    </script>
+
+    <style type="text/css">
+        .redd {
+            color: yellow;
+        }
+
+        .active {
+            color: red;
+        }
+    </style>
+
+
+</body>
+
+</html>

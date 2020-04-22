@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <script src="js/vue.js" type="text/javascript"></script>
+</head>
+
+<body>
+    <div id="todo">
+        todo:
+        <input type="text" v-focus="true" v-model="value" :class="{empty:!count}" @keyup.enter="addItem" />
+        <span v-if="nothing">please write your todo....</span>
+        <input type="button" value="mark all todos as completed" @click="allCompleted" />
+        <div>
+            <ul>
+                <li v-for="item in filteredItems" :key="item.id" @dblclick="editTodo(item)">
+                    <span :class="{completed:item.completed}">{{ item.title }}</span>
+                    <input type="button" value="mark as completed" @click="isCompleted(item)"
+                        v-if="!item.completed && !item.removed" />
+                    <input type="button" value="not completed" @click="notCompleted(item)"
+                        v-if="item.completed && !item.removed" />
+                    <input type="button" value="delete" @click="toDelete(item)" v-if="!item.removed" />
+                    <input type="button" value="restore" @click="item.removed=false" v-if="item.removed" />
+                    <input type="text" v-focus="true" v-if="item.editing" v-model="editedTodo"
+                        @keyup.enter="editDone(item)" @keyup.esc="cancelEdit(item)" />
+
+                </li>
+            </ul>
+        </div>
+        <div>
+            <span v-if="items.length === 0">Add your todo...</span>
+            <span v-else-if="items.length != 0 && inProgressCount === 0">Congradulations! You finished all the
+                todos!</span>
+            <span v-else>still {{inProgressCount}} not completed ---
+                operations：</span>
+            <div v-if="items.length">
+                <input type="button" value="all todos" :class="{selected:intention==='all'}" @click="intention='all'" />
+                <input type="button" value="todos in process" :class="{selected:intention==='inProgress'}"
+                    @click="intention='inProgress'" />
+                <input type="button" value="completed" :class="{selected:intention==='completed'}"
+                    @click="intention='completed'" />
+                <input type="button" value="delete all completed" :class="{selected:intention==='DeleteAllCompleted'}"
+                    @click="deleteAllCompleted" />
+                <input type="button" value="delete all" :class="{selected:intention==='DeleteAll'}"
+                    @click="deleteAll" />
+                <input type="button" value="RecyclingBin" :class="{selected:intention==='Recycling'}"
+                    @click="intention='Recycling'" />
+                <input type="button" value="clean the RecyclingBin" @click="cleanRecyclingBin" />
+
+            </div>
+        </div>
+    </div>
+</body>
+
+
+<script>
+    let id = 0;
+    var STORAGE_KEY = "vue-todo-project";
+    var todoStorage = {
+        fetch: function () {
+            var items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            items.forEach(function (item, index) {
+                item.id = index;
+            });
+            todoStorage.id = items.length;
+            return items;
+        },
+        save: function (items) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+        }
+
+    };
+    var todo = new Vue({
+        el: '#todo',
+        data: {
+            value: '',
+            items: todoStorage.fetch(),
+            completed: [],
+            inProgress: [],
+            nothing: false,
+            editedTodo: '',
+            intention: '',
+        },
+        methods: {
+            allCompleted: function () {
+                console.log("mark all todos as completed");
+                this.items.map(function (item) {
+                    if (!item.completed) {
+                        item.completed = true;
+                    }
+                });
+            },
+            isCompleted: function (item) {
+                item.completed = true;
+                this.completed.push(item);
+                console.log("this todo is completed");
+            },
+            notCompleted: function (item) {
+                item.completed = false;
+                this.inProgress.push(item);
+                console.log("this todo is not completed");
+            },
+            editTodo: function (item) {
+                console.log("edit the todo");
+                item.editing = true;
+                // this.editedTodo = { id: item.id, title: item.title, completed: item.completed };
+            },
+            editDone: function (item) {
+                console.log("editting has been finished");
+                if (!this.editedTodo.length) {
+                    alert("the todo cannot be empty");
+                } else {
+                    item.title = this.editedTodo;
+                    this.editedTodo = '';
+                    item.editing = false;
+                }
+            },
+            cancelEdit: function (item) {
+                console.log("the editting is cancelled");
+                this.editedTodo = '';
+                item.editing = false;
+
+            },
+            toDelete: function (item) {
+                if (!confirm("Are you sure to delete this todo?")) {
+                    return;
+                }
+                item.removed = true;
+                // this.items.pop(item);
+                console.log("delete this todo");
+            },
+            addItem: function () {
+                if (this.value) {
+                    this.items.push({ id: todoStorage.id++, title: this.value, completed: false, editing: false, removed: false });
+                    this.value = '';
+                } else {
+                    this.nothing = true;
+                    alert("please enter something...");
+                }
+
+            },
+            deleteAllCompleted: function () {
+                if (!confirm("Are you sure to delete all those completed todos?")) {
+                    return;
+                }
+                console.log("delete all completed todos");
+                this.items.filter(item => !item.completed).forEach(item => {
+                    item.removed = true;
+                });
+                this.intention = "DeleteAllCompleted";
+            },
+            deleteAll: function () {
+                console.log("delete all todos");
+                if (!confirm("Are you sure to delete all those todos?")) {
+                    return;
+                }
+                this.items.forEach(item => {
+                    item.removed = true;
+                });
+                // this.items = [];
+                this.intention = "DeleteAll";
+            },
+            cleanRecyclingBin: function () {
+                console.log("Clean the Recycling Bin");
+                this.items = this.items.filter(item => !item.removed);
+            },
+            sendMessage: function () {
+                if (!this.count) {
+                    alert("empty!");
+                } else {
+                    alert("the message has been sent");
+                }
+
+            }
+        },
+        computed: {
+            inProgressCount: function () {
+                return this.inProgressItems.length;
+            },
+            inProgressItems: function () {
+                return this.items.filter(item => !item.removed && !item.completed);
+            },
+            count: function () {
+                return this.value.length;
+            },
+            filteredItems: function () {
+                if (this.intention === "completed") {
+                    return this.items.filter(item => item.completed && !item.removed);
+                } else if (this.intention === 'inProgress') {
+                    return this.inProgressItems;
+                } else if (this.intention === 'Recycling') {
+                    return this.items.filter(item => item.removed);
+                } else {
+                    return this.items.filter(item => !item.removed);
+                }
+            },
+        },
+        watch: {
+            items: {
+                handler: function (items) {
+                    todoStorage.save(items);
+                },
+                deep: true
+            }
+
+        },
+        directives: {
+            focus: {
+                inserted: function (el) {
+                    el.focus();
+                }
+            }
+        }
+
+    });
+
+</script>
+<style>
+    .empty {
+        border-color: red;
+    }
+
+    .completed {
+        text-decoration: line-through;
+    }
+
+    .selected {
+        color: red;
+    }
+</style>
+
+</html>
