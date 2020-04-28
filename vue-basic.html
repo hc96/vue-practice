@@ -17,27 +17,13 @@
         <div>
             <p v-if="seen">Can you see me?</p>
         </div>
-
-
-
         <!-- v-bind:class -->
         <div v-bind:class="[isActive?active:'']">
             This is a test for class binding.
         </div>
         <!-- v-show -->
         <h1 v-show="ok">Test for v-show</h1>
-        <!-- v-for -->
-        <!-- NOTE: here item before index -->
-        <ul>
-            <li v-for="item,index in items" :key="index">
-                {{index}} : {{item.message}}
-            </li>
-        </ul>
-        <ul>
-            <li v-for="key,value in books" :key="key">
-                {{key}} : {{value}}
-            </li>
-        </ul>
+
 
         <!-- v-on -->
         <div>
@@ -45,20 +31,7 @@
             <button v-on:click="sayHello('Hey you!',$event)">say</button>
         </div>
 
-        <!-- v-model -->
-        <textarea v-model="text1"></textarea>
-        <span> {{text1}}</span>
 
-        <div>
-            <input type="checkbox" id="apple" value="Apple" v-model="checkName">
-            <label for="apple">Apple</label>
-            <input type="checkbox" id="banana" value="Banana" v-model="checkName">
-            <label for="banana">Banana</label>
-            <input type="checkbox" id="watermelon" value="Watermelon" v-model="checkName">
-            <label for="watermelon">Watermelon</label>
-
-            <span>{{checkName}}</span>
-        </div>
 
         <!-- component -->
         <button-counter title="title1 :"></button-counter>
@@ -109,13 +82,129 @@
         <!-- cutomized -->
         <h3>customized keyCode</h3>
         <div>
+            Try to Press A here:
             <input type="text" @keyup.a="pressA" />
         </div>
 
+        <!-- 
+            v-bind
+            * v-bind:class
+                - object/array {active:isActive,error:isError}  [active?'isActive':'notActive']   ['isActive',{error:isError}]
+            
+            * v-bind:style
+        -->
+        <div>
+            <h2>v-bind</h2>
+            <span v-bind:class="[isRed?'redColor':'blueColor',{size:isSmall}]">What is the color?</span>
+            <input type="button" value="Change Color" @click="changeColor" />
+
+            <h3>Use v-on and v-bind to realize binding</h3>
+            <input type="text" v-bind:value="bindMsg" v-on:input="handleBind" /><br>
+            <span v-text="bindMsg"></span>
+
+            <div v-bind:style="newStyle">
+            </div>
+
+        </div>
+
+        <!-- 
+            v-model
+            *modifier
+                - .number
+                - .trim
+                - .lazy eg: verify your accout when lose focus in input
+        -->
+        <h2>v-model</h2>
+        <textarea v-model="text1"></textarea>
+        <span> {{text1}}</span>
+
+        <div>
+            <input type="checkbox" id="apple" value="Apple" v-model="checkName">
+            <label for="apple">Apple</label>
+            <input type="checkbox" id="banana" value="Banana" v-model="checkName">
+            <label for="banana">Banana</label>
+            <input type="checkbox" id="watermelon" value="Watermelon" v-model="checkName">
+            <label for="watermelon">Watermelon</label>
+
+            <span>{{checkName}}</span>
+        </div>
+
+
+
+        <!-- v-show -->
+        <h2>v-show</h2>
+        <div :style="newStyle" v-show="showGreen">
+
+        </div>
+        <input type="button" value="click me!" @click="showGreen = !showGreen" />
+
+        <!-- 
+            v-if
+            v-else-if
+            v-else  
+        -->
+        <h2>v-if</h2>
+        <div>
+            Enter your score here:
+            <input type="text" @keyup.enter="score=$event.target.value" /><br>
+            The Result:
+            <span v-if="score >= 80 && score <= 100">Good</span>
+            <span v-else-if="score < 80 && score >= 60">Passed</span>
+            <span v-else-if="score < 60 && score >= 0">Failed</span>
+            <span v-else>Please write the correct score.</span>
+        </div>
+
+        <!-- v-for -->
+        <!-- NOTE: here item before index -->
+        <h2>v-for</h2>
+        <ul>
+            <li v-for="item,index in items" :key="index">
+                {{index}} : {{item.message}}
+            </li>
+        </ul>
+        <ul>
+            <li v-for="key,value in books" :key="key">
+                {{key}} : {{value}}
+            </li>
+        </ul>
+        <h3>traversal (value,key,index)</h3>
+        <p v-for="(value,key,index) in books">{{key + '---' + value + '---' + index}}</p>
+        <!-- v-if + v-for -->
+        <h3>v-if + v-for</h3>
+        <p v-for="(value,key,index) in books" v-if="key=='author'">{{key + '---' + value + '---' + index}}</p>
+
+
+
+        <!-- custom directive -->
+        <h2>Custom Directives</h2>
+        <div v-color="msgColor">My color is ...?</div>
+
+
+        <!-- watch -->
+        <h2>watch</h2>
+        <div>
+            用户名：<input type="text" v-model.lazy="account" />
+            <span>{{tip}}</span>
+        </div>
+
+        <!-- 
+            filter
+            *filter with arguments
+         -->
+        <h2>filter</h2>
+        <div>
+            The first letter is in upper case:
+            <input type="text" v-model="filterValue" />
+            <span>{{ filterValue | upper }}</span>
+            <span>{{ date | format('filter-','-argument')}}</span>
+        </div>
+
+
+
+
+
+
     </div>
-
-
-
     <script>
         // 全局注册
         Vue.component('button-counter', {
@@ -125,12 +214,19 @@
                     counter: 0,
                 }
             },
-            template: '<button v-on:click="clickFun"> {{title}} You clicked me : {{counter}} times.</button>',
+            template: '<button v-on:click=" clickFun"> {{title}} You clicked me : {{counter}} times.</button>',
             methods: {
                 clickFun: function () {
                     this.counter++;
                 }
             }
+        });
+
+        Vue.filter("format", function (val, arg1, arg2) {
+            console.log(arg1 + arg2);
+            var ret = '';
+            ret += val.getFullYear() + "-" + (val.getMonth() + 1) + "-" + val.getDate();
+            return ret;
         });
 
         Vue.config.keyCodes.a = 65;
@@ -160,6 +256,26 @@
                 checkName: [],
                 num: 0,
                 deleteMsg: '',
+                isRed: true,
+                isSmall: true,
+                bindMsg: "BindingBinding",
+                newStyle: {
+                    border: '1px solid red',
+                    width: '100px',
+                    height: '100px',
+                    backgroundColor: 'lightgreen',
+                },
+                showGreen: false,
+                score: -1,
+                aNumber: 0,
+                msgColor: {
+                    color: 'green',
+                },
+                account: '',
+                tip: '',
+                filterValue: '',
+                date: new Date(),
+
             },
             methods: {
                 click1: function () {
@@ -175,13 +291,45 @@
                     alert(str);
                     console.log(e);
                 },
-                increaseNumber: function (message, e) {
+                increaseNumber: function (message, event) {
                     console.log(message);
-                    console.log(e.Target.targetName);
+                    console.log(event.target.tagName);
                     this.num++;
                 },
                 pressA: function () {
                     alert("You just pressed A.");
+                },
+                handleBind: function () {
+                    console.log("Use v-on and v-bind to realize data binding.");
+                    this.bindMsg = event.target.value;
+                },
+                changeColor: function () {
+                    this.isRed = !this.isRed;
+                    this.isSmall = !this.isSmall;
+                },
+                accountMonitor: function (newAccount) {
+
+                    this.tip = "verifying the account name";
+                    var that = this;
+                    setTimeout(function () {
+                        if (newAccount == "admin") {
+                            that.tip = "the account has been used";
+                        } else if (newAccount == "") {
+                            that.tip = "the account name cannot be empty";
+                        }
+                        else {
+                            that.tip = "you can use this account name";
+                        }
+
+                    }, 2000);
+                },
+
+            },
+            directives: {
+                color: {
+                    bind: function (el, binding) {
+                        el.style.backgroundColor = binding.value.color;
+                    }
                 }
 
             },
@@ -190,8 +338,21 @@
                     template: '<h1>This is h1</h1>'
                 },
             },
+            filters: {
+                upper: function (val) {
+                    return val.charAt(0).toUpperCase() + val.slice(1);
+                },
+
+            },
+            watch: {
+                account: function (val) {
+                    this.accountMonitor(val);
+                }
+
+            },
 
             // Vue life cycle
+            //initialization
             beforeCreate: function () {
                 console.log("beforeCreate");
 
@@ -205,6 +366,7 @@
             mounted: function () {
                 console.log("mounted");
             },
+            //update element or component
             beforeUpdate: function () {
                 console.log("beforeUpdated");
             },
@@ -240,6 +402,18 @@
 
         .active {
             color: red;
+        }
+
+        .redColor {
+            color: red;
+        }
+
+        .blueColor {
+            color: blue;
+        }
+
+        .size {
+            font-size: small;
         }
     </style>
 
