@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <script src="js/vue.js" type="text/javascript"></script>
+</head>
+
+<body>
+
+    <div id="app">
+
+        <!-- creation of child components -->
+        <h1>child components</h1>
+        <button-counter></button-counter>
+        <hello-world></hello-world>
+        <hello-mary></hello-mary>
+
+        <!-- slot -->
+        <h1>slot</h1>
+        <hello-jack>
+            <template slot="jack">
+                <span> I am Jack 1. </span>
+                <span> I am Jack 2.</span>
+            </template>
+
+            <template slot="mary">
+                <span> I am Mary 1. </span>
+                <span> I am Mary 2.</span>
+            </template>
+        </hello-jack>
+
+        <!-- communication between parent and child components -->
+        <h1>parent-child communication</h1>
+        <h2>use of v-slot</h2>
+        <menu-item :items="items" @enlarge-text="handle($event)">
+            <template v-slot:default="slotProps">
+                <strong v-if="slotProps.item.id==2" :class="{current}">{{slotProps.item.name}}</strong>
+                <strong v-else>{{slotProps.item.name}}</strong>
+            </template>
+
+
+        </menu-item>
+        <div>
+            <span :style='{fontSize: fontSize + "px"}'>I am the Parent Component.</span>
+        </div>
+
+        <!-- communication between non-parent-child components -->
+        <h1>non-parent-child communication</h1>
+        <test-tom></test-tom>
+        <test-jerry></test-jerry>
+        <span>Parent Component.</span>
+        <button @click="toDestroy">Destroy the event.</button>
+
+    </div>
+
+
+
+
+
+
+
+
+</body>
+
+<script>
+    /*
+            1. data is function
+            2. template of component should have a root element
+            3. template string
+    */
+
+
+    //global registration
+
+    Vue.component("HelloWorld", {
+        data: function () {
+            return {
+                msg: 'Hello,World!',
+            }
+        },
+        template: `<div>{{msg}}</div>`,
+    });
+
+    Vue.component("button-counter", {
+        data: function () {
+            return {
+                counter: 0,
+            }
+        },
+        template: `
+        <div>
+        <button @click="counter++">You Clicked {{counter}} times.</button>
+        <HelloWorld></HelloWorld>
+        </div>
+        `,
+
+    });
+
+    var HelloMary = {
+        data: function () {
+            return {
+                msg: 'Hello,Mary!',
+            }
+        },
+        template: `<div>{{msg}}</div>`,
+    };
+
+    // slots / with name, using <template>
+
+    var HelloJack = {
+        data: function () {
+            return {
+                msg: 'Hello,Jack!',
+            }
+        },
+        template: `<div>
+        
+        <strong>{{msg}}</strong><br>
+        <slot name="jack"></slot><br>
+        <strong>Hello,Mary!</strong><br>
+        <slot name="mary"></slot>
+        
+        
+        </div>`,
+    };
+
+    var MenuItem = {
+        props: ['items'],
+        data: function () {
+            return {
+
+            }
+        },
+        template: `<div>
+                    <ul>
+                    <li :key="item.id" v-for="item in items">
+                    <slot :item="item">
+                    {{ item.name }}
+                    </slot>
+                    </li>
+                    </ul>
+                    <button @click="$emit('enlarge-text',5)">Enlarge the text of Parent Component.</button>
+                   </div>`,
+    }
+
+
+    //  non-parent-child communication
+    var hub = new Vue();
+
+    var TestTom = {
+        data: function () {
+            return {
+                num: 0,
+            }
+        },
+        template: `
+        <div>
+            <span>Number of Tom: {{ num }}</span>
+            <button @click="handel">add number for Jerry</button>
+        </div>     
+        `,
+        methods: {
+            handel: function () {
+                hub.$emit("jerry-event", 5);
+            }
+        },
+        mounted: function () {
+            hub.$on("tom-event", (val) => {
+                this.num += val;
+            });
+        }
+    };
+
+    var TestJerry = {
+        data: function () {
+            return {
+                num: 0,
+            }
+        },
+        template: `
+        <div>
+            <span>Number of Jerry: {{ num }}</span>
+            <button @click="handel">add number for Tom</button>
+        </div>     
+        `,
+        methods: {
+            handel: function () {
+                hub.$emit("tom-event", 2);
+            }
+        },
+        mounted: function () {
+            hub.$on("jerry-event", (val) => {
+                this.num += val;
+            });
+        }
+    };
+
+
+    var app = new Vue({
+        el: '#app',
+        data: {
+            items: [
+                {
+                    id: 1,
+                    name: 'apple'
+                },
+                {
+                    id: 2,
+                    name: 'banana',
+                },
+                {
+                    id: 3,
+                    name: 'watermelon',
+
+                }
+            ],
+            fontSize: 10,
+            current: 'current',
+
+        },
+        methods: {
+            handle: function (val) {
+                this.fontSize += val;
+            },
+            toDestroy: function () {
+                hub.$off("tom-event");
+                hub.$off("jerry-event");
+            }
+        },
+        components: {
+            //only can be used in this parent component
+            'hello-mary': HelloMary,
+            'hello-jack': HelloJack,
+            'menu-item': MenuItem,
+            'test-tom': TestTom,
+            'test-jerry': TestJerry,
+        }
+
+
+    });
+
+
+</script>
+
+<style>
+    .current {
+        color: orange;
+    }
+</style>
+
+</html>

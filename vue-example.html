@@ -36,8 +36,8 @@
             </div>
 
         </div>
-
     </div>
+    <br><br>
 
     <!-- 
         book management 
@@ -89,24 +89,206 @@
                 </tbody>
             </table>
         </div>
-
-
-
-
-
     </div>
+    <br><br>
 
 
+    <!--  
+        shopping cart 
 
+        *refinements needed
+    
+    -->
 
-
-
-
-
+    <div id="shopping">
+        <h1>Shopping Cart</h1>
+        <div class="cart">
+            <my-cart></my-cart>
+        </div>
+    </div>
 
 </body>
 
 <script>
+    // shopping cart
+
+    var CartTitle = {
+        template: `
+        <div class="title"> My Items</div>   
+        `,
+
+    };
+
+    var CartList = {
+        props: ['list'],
+        template: `
+        <div class="mycart">
+        <div :key="item.id" v-for="item in list" class="item">
+        <img :src="item.path"/>
+        <div class="name">{{item.name}}</div>
+        <div class="delete"><img src="imgs/shopping_cart_delete.png" @click="deleteItem(item.id)"/></div>
+        <div class="change">
+        <a href="" @click.prevent="sub(item.id)"> - </a>
+        <input type="text" class="num" :value="item.num" @blur="inputNum(item.id,$event)"/>
+        <a href="" @click.prevent="add(item.id)"> + </a>
+        </div>
+        </div>
+        </div>   
+        `,
+        methods: {
+            inputNum: function (id, e) {
+                this.$emit("change-num", {
+                    id: id,
+                    num: e.target.value,
+                    type: 'input',
+                });
+            },
+            add: function (id) {
+                this.$emit("change-num", {
+                    id: id,
+                    type: 'add',
+                });
+            },
+            sub: function (id) {
+                this.$emit("change-num", {
+                    id: id,
+                    type: 'sub',
+                });
+
+            },
+            deleteItem: function (id) {
+                this.$emit("delete-item", id);
+            }
+        }
+
+    };
+
+    var CartTotal = {
+        props: ['list'],
+        template: `
+        <div class="total">
+            <span>Total Price:  {{ total }} </span>
+            <button> Pay </button>
+        </div>   
+        `,
+        computed: {
+            total: function () {
+                // calcaulate the total price here
+                var total = 0;
+                this.list.forEach(element => {
+                    total += element.price * element.num;
+                });
+                return total;
+            }
+        }
+    };
+
+
+    var MyCart = {
+        data: function () {
+            return {
+                list: [
+                    {
+                        id: 1,
+                        name: 'banana',
+                        price: 5,
+                        num: 1,
+                        path: 'imgs/shopping_cart_banana.png'
+                    },
+                    {
+                        id: 2,
+                        name: 'cherry',
+                        price: 20,
+                        num: 1,
+                        path: 'imgs/shopping_cart_cherry.png'
+                    },
+                    {
+                        id: 3,
+                        name: 'watermelon',
+                        price: 5,
+                        num: 1,
+                        path: "imgs/shopping_cart_watermelon.png"
+                    },
+                    {
+                        id: 4,
+                        name: 'pineapple',
+                        price: 10,
+                        num: 1,
+                        path: 'imgs/shopping_cart_pineapple.png'
+                    },
+                    {
+                        id: 5,
+                        name: 'kiwi',
+                        price: 15,
+                        num: 1,
+                        path: 'imgs/shopping_cart_kiwi.png'
+                    },
+                ],
+            }
+
+
+
+        },
+        template: `
+        <div>
+        <cart-title></cart-title>
+        <cart-list :list="list" @change-num="handleNum($event)" @delete-item="deleteItem($event)"></cart-list>
+        <cart-total :list="list"></cart-total>
+        </div>
+        `,
+        components: {
+            'cart-title': CartTitle,
+            'cart-list': CartList,
+            'cart-total': CartTotal,
+        },
+        methods: {
+            handleNum: function (val) {
+                if (val.type == "input") {
+                    this.list.some(item => {
+                        if (item.id == val.id) {
+                            item.num = val.num;
+                        }
+
+                    });
+                } else if (val.type == "add") {
+                    this.list.some(item => {
+                        if (item.id == val.id) {
+                            item.num++;
+                        }
+                    });
+
+                } else if (val.type == "sub") {
+                    this.list.some(item => {
+                        if (item.id == val.id) {
+                            item.num--;
+                        }
+                    });
+
+                }
+
+            },
+            deleteItem: function (val) {
+                var index = this.list.findIndex(item => {
+                    return item.id == val;
+                })
+                this.list.splice(index, 1);
+            },
+        }
+    }
+
+
+    var shopping = new Vue({
+        el: '#shopping',
+        data: {
+
+
+        },
+        components: {
+            'my-cart': MyCart,
+        }
+
+    });
+
 
     // calculator
     var vm = new Vue({
@@ -285,6 +467,103 @@
 </script>
 
 <style>
+    /* shopping cart */
+
+    .cart {
+        width: 600px;
+        margin: auto;
+    }
+
+    .title {
+        width: 100%;
+        height: 100px;
+        background-color: lightgreen;
+        text-align: center;
+        font-size: 30px;
+        line-height: 100px;
+    }
+
+    .mycart {
+        width: 100%;
+        height: 450px;
+        background-color: lightgoldenrodyellow;
+    }
+
+    .mycart .item {
+        width: 100%;
+        height: 90px;
+        background-color: lightpink;
+
+    }
+
+    .mycart .item:not(:first-child) {
+        border-top: 2px solid rgb(255, 157, 173);
+    }
+
+    .mycart img {
+        float: left;
+        width: 50px;
+        margin-left: 20px;
+        margin-top: 15px;
+    }
+
+    .mycart .name {
+        float: left;
+        width: 200px;
+        text-align: center;
+        line-height: 80px;
+        font-size: 20px;
+        font-weight: bold;
+    }
+
+    .mycart .change {
+        width: 80px;
+        float: right;
+        margin-top: 25px;
+    }
+
+    .mycart .change a {
+
+        text-decoration: none;
+    }
+
+    .mycart .change .num {
+
+        width: 30px;
+    }
+
+    .mycart .delete img {
+        float: right;
+        width: 50px;
+        margin-right: 30px;
+    }
+
+    .total {
+        width: 100%;
+        height: 100px;
+        background-color: lightgreen;
+        font-size: 20px;
+        line-height: 50px;
+    }
+
+    .total span {
+        float: left;
+        margin-left: 300px;
+        margin-top: 30px;
+    }
+
+    .total button {
+        float: left;
+        width: 45px;
+        height: 45px;
+        font-size: 15px;
+        font-weight: bold;
+        background-color: lightsalmon;
+        margin-left: 20px;
+        margin-top: 30px;
+    }
+
+    /* tab */
     .tabContainer {
         width: 500px;
         height: 500px;
