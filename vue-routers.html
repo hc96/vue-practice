@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <script src="js/vue.js"></script>
+    <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+</head>
+
+<body>
+
+    <div id="app">
+        <!-- use router-link component for navigation -->
+        <p>
+            <router-link to="/user/1">User 1</router-link>
+            <router-link to="/user/2">User 2</router-link>
+            <!-- named routes -->
+            <router-link :to="{name:'user',params:{id:3}}">User 3</router-link>
+            <router-link to="/register">Register</router-link>
+        </p>
+
+        <!-- placeholder: component matched by the route will render here -->
+        <router-view></router-view>
+    </div>
+
+
+</body>
+
+<script>
+
+    // define route components
+    const Tab1 = {
+        template: `
+        <div> Tab1 </div>
+        `,
+    };
+
+    const Tab2 = {
+        template: `
+        <div> Tab2 </div>
+        `,
+    };
+
+    const User = {
+        props: ['id', 'name', 'age'],
+        template: `
+        <div>
+           <h1>User</h1>
+
+           <hr/>
+           <div>
+             <h2> The user id is: {{id}} -- name: {{name}} -- age: {{age}}  </h2>
+             <button @click="goRegister">Go Register</button>
+           </div>
+        </div>
+        `,
+        methods: {
+            goRegister() {
+                this.$router.push({ name: 'register' });
+            }
+        }
+    };
+
+    const Register = {
+        template: `
+        <div>
+            <h1>Register</h1>
+            <hr/>
+
+            <router-link to="/register/tab1">tab1</router-link>
+            <router-link to="/register/tab2">tab2</router-link>
+
+            <router-view />
+
+            <hr/>
+            <button @click="goBack">Go Back</button>
+        </div>
+        `,
+        methods: {
+            goBack() {
+                this.$router.go(-1);
+            }
+        }
+    };
+
+    // each route maps to a component
+    // * nested routes
+    // * dynamic route matching
+    // * passing props to route components
+    const routes = [
+        { path: '/', redirect: '/user' },
+        { path: '/user/:id', name: 'user', component: User, props: route => ({ id: route.params.id, name: "Ella", age: 18 }) },
+        {
+            path: '/register', name: 'register', component: Register, children: [
+                { path: '/register/tab1', component: Tab1 },
+                { path: '/register/tab2', component: Tab2 },
+            ]
+        }
+    ]
+
+    // create a router instance
+    const router = new VueRouter({
+        routes
+    })
+
+
+    const app = new Vue({
+        el: '#app',
+        router
+
+    });
+
+
+</script>
+
+<style>
+
+</style>
+
+</html>
